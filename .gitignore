@@ -1,0 +1,6 @@
+token.txt
+Thumbs.db
+__pycache__
+*.pyc
+*.zip
+*.bat
