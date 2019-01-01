@@ -62,5 +62,17 @@
     "memorize.memorize":"紙幣と地図のみ暗記してね: {0}",
     "memorize.send":"同じ並びの絵文字があるメッセージを送信してね。時間制限は30秒だよ!",
     "memorize.good":"{0}さん、正解!",
-    "memorize.answer":"正解は {0} でした! さようなら!"
+    "memorize.answer":"正解は {0} でした! さようなら!",
+    "vfn.same":"ニックネームが変わってないよ!",
+    "vfn.badword":"この名前はあまりよくないな。",
+    "vfn.vote":"{0} が、私のニックネームを `{1}` から `{2}`にしたいと言っています。どう思いますか?",
+    "vfn.changed":"ニックネームは {0} になりました。",
+    "vfn.notChanged":"ニックネームは変わりませんでした。",
+    "money.wallet.title":"さいふ",
+    "money.wallet.description":"{0}K持っています。",
+    "money.over":"そんなお金ないよ!",
+    "money.give.author":"送り先を確認してください",
+    "money.num":"金額が不正です。",
+    "money.give.success":"正常に送金されました。",
+    "money.bet.done":"完了しました。 `me:money wallet`で財布をのぞいてみてください。"
 }

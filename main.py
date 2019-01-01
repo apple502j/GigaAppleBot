@@ -27,7 +27,11 @@ FORUMLIMIT = 0
 GHLIMIT = 0
 localize.update()
 localize.getlocale(0)
-bot = c.Bot(command_prefix="me:", pm_help=True, activity=d.Activity(name="^help"))
+bot = c.Bot(command_prefix="me:", pm_help=True, activity=d.Activity(name="me:help Icon by kazuta123",
+                                                                    type=d.ActivityType.watching))
+
+from money import Money
+bot.add_cog(Money())
 
 def catnese(word, uid):
     sp=re.findall("."*randint(2,4),word)
@@ -92,6 +96,7 @@ async def on_message(msg):
 
 @bot.command()
 async def setlang(ctx, l="ja"):
+    """言語設定"""
     uid=ctx.author.id
     if l in localize.AVAILABLE:
         localize.setlocale(uid, l)
@@ -104,13 +109,20 @@ async def setlang(ctx, l="ja"):
 @bot.command()
 @c.is_owner()
 async def exit(ctx):
+    """Owner only; exit command."""
     sys.exit()
 
 @bot.command()
 @c.is_owner()
 async def reload(ctx):
+    """Reload the translations."""
     localize.update()
     localize.getlocale(0)
+
+@bot.command()
+async def demojy(ctx, emj):
+    """テスト用: Demojy"""
+    await ctx.send(f"`{emojy.demojize(emj)}`")
 
 @bot.command()
 async def hello(ctx):
@@ -472,6 +484,61 @@ async def morize(ctx):
         await ctx.send(_("memorize.answer", uid, ankey))
         MEMORIZING=False
         return
+
+@bot.command()
+async def votefornick(ctx, newname):
+    """過去の遺物"""
+    return
+    uid=ctx.author.id
+    UP=":thumbs_up:"
+    DOWN=":thumbs_down:"
+    cnick=bot.user.display_name
+    newnick=newname
+    class FAKE:
+        count=0
+    if cnick == newname:
+        await ctx.send(_("vfn.same",uid))
+        return
+    if scratchapi2.Misc().username_available(re.sub(r"[^a-zA-Z0-9-_]","",newnick) or "hoge") == "bad username":
+        await ctx.send(_("vfn.badword",uid))
+        return
+    ms=await ctx.send(_("vfn.vote", uid, ctx.author.display_name, cnick, newnick))
+    await ms.add_reaction(emojy.emojize(UP))
+    await ms.add_reaction(emojy.emojize(DOWN))
+    """
+    def chk(r,u):
+        mss=r.message
+        if mss.id!=ms.id:
+            return 0
+
+        print(mss.reactions)
+        upcount=d.utils.get(mss.reactions, emoji=emojy.emojize(UP)).count - 1
+        downcount=d.utils.get(mss.reactions, emoji=emojy.emojize(DOWN)).count - 1
+        return upcount+downcount > 2
+
+    try:
+        await bot.wait_for("reaction_add", timeout=120, check=chk)
+        upcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(UP)) or FAKE).count - 1
+        downcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(DOWN)) or FAKE).count - 1
+        if upcount > downcount:
+            await ctx.send(_("vfn.changed", uid))
+            await ctx.message.channel.guild.me.edit(nick=newname)
+        else:
+            await ctx.send(_("vfn.notChanged",uid, newnick))
+    except asyncio.TimeoutError:
+        await ctx.send(_("vfn.notChanged",uid))
+    """
+    print(ms)
+    #print(ms.reactions)
+    time.sleep(5)
+    #print(ms.reactions)
+    upcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(UP)) ).count - 1
+    downcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(DOWN)) ).count - 1
+    if (upcount + downcount) > 0 and (upcount > downcount):
+        await ctx.send(_("vfn.changed", uid))
+        await ctx.message.channel.guild.me.edit(nick=newname)
+    else:
+        await ctx.send(_("vfn.notChanged",uid))
 
 print("Do")
 bot.run(TOKEN)

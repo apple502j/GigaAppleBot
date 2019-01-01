@@ -62,5 +62,17 @@
     "memorize.memorize":"Memorize BILLS and MAPS: {0}",
     "memorize.send":"Send the emojis in order! You have 30 seconds to answer.",
     "memorize.good":"{0}, Correct!",
-    "memorize.answer":"The answer is {0}! See you later."
+    "memorize.answer":"The answer is {0}! See you later.",
+    "vfn.same":"That's the same nickname! Canceled.",
+    "vfn.badword":"This nickname is not very nice.",
+    "vfn.vote":"{0} requested to change the nickname of me from `{1}` to `{2}`. What do you think?",
+    "vfn.changed":"Nickname changed to {0}",
+    "vfn.notChanged":"Nickname not changed.",
+    "money.wallet.title":"Your wallet",
+    "money.wallet.description":"You have {0}K.",
+    "money.over":"You don't have much money to do so!",
+    "money.give.author":"Who are you sending your money!?",
+    "money.num":"Invalid K given.",
+    "money.give.success":"Your money is successfully given.",
+    "money.bet.done":"Done. You may want to check using `me:money wallet`."
 }
