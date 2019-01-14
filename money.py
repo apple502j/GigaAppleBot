@@ -78,7 +78,7 @@ class Money:
 
     @money.command()
     async def bet(self, ctx, k):
-        """ギャンブルです。1回10K"""
+        """ギャンブルです。1回50K"""
         uid=str(ctx.author.id)
         try:
             k=await self.valid(ctx, uid,k)
@@ -86,12 +86,12 @@ class Money:
             print(e)
             return
         m=self.getum(uid)
-        if k>m+10:
+        if k>m+50:
             await ctx.send(_("money.over",uid))
             return
-        m-=10
+        m-=50
         m-=k
-        rate=randint(100,115)/100
+        rate=randint(70,130)/100
         k*=rate
         self.setum(uid, int(m+k))
         await ctx.send(_("money.bet.done",uid))

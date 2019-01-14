@@ -5,6 +5,7 @@
     "bot.hello":"こんにちわんこ!",
     "bot.languageChanged":"言語が変更されました。",
     "bot.badLanguage":"そのような言語はありません。",
+    "bot.sep":"、 ",
     "translate.rateLimit":"翻訳間は5秒待ってください!",
     "news.rateLimit":"ニュースのコマンド間は10秒待ってください!",
     "news.title":"Scratchニュース",
@@ -74,5 +75,9 @@
     "money.give.author":"送り先を確認してください",
     "money.num":"金額が不正です。",
     "money.give.success":"正常に送金されました。",
-    "money.bet.done":"完了しました。 `me:money wallet`で財布をのぞいてみてください。"
+    "money.bet.done":"完了しました。 `me:money wallet`で財布をのぞいてみてください。",
+    "regex.valid":"この正規表現は有効です。",
+    "regex.invalid":"この正規表現はどこかがおかしいです。",
+    "regex.empty":"(空)",
+    "tts.rateLimit":"TTSコマンド間は30秒待ってください!"
 }

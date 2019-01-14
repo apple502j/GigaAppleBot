@@ -5,6 +5,7 @@
     "bot.hello":"Hello!",
     "bot.languageChanged":"Language changed.",
     "bot.badLanguage":"That language does not exist.",
+    "bot.sep":", ",
     "translate.rateLimit":"Please wait for 5 seconds between translating commands!",
     "news.rateLimit":"Please wait for 10 seconds between news command!",
     "news.title":"Scratch News",
@@ -74,5 +75,9 @@
     "money.give.author":"Who are you sending your money!?",
     "money.num":"Invalid K given.",
     "money.give.success":"Your money is successfully given.",
-    "money.bet.done":"Done. You may want to check using `me:money wallet`."
+    "money.bet.done":"Done. You may want to check using `me:money wallet`.",
+    "regex.valid":"This regex is valid.",
+    "regex.invalid":"This regex is not valid.",
+    "regex.empty":"(Empty)",
+    "tts.rateLimit":"Please wait for 30 seconds between TTS command!"
 }

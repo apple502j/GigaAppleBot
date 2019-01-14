@@ -3,7 +3,10 @@ import sys
 from random import randint, shuffle # random color
 from html import escape, unescape # parse html
 import re
+import os
+import shutil
 import time # system timestamp
+from urllib.parse import quote
 import json # parse json value
 import asyncio # await/async
 import requests # internet requests
@@ -17,6 +20,9 @@ import emoji as emojy
 from emojiflags import lookup as ec
 from localize import _
 import localize
+from util import stream
+
+
 
 with open("token.txt") as tkn:
     TOKEN=tkn.read().strip()
@@ -32,6 +38,20 @@ bot = c.Bot(command_prefix="me:", pm_help=True, activity=d.Activity(name="me:hel
 
 from money import Money
 bot.add_cog(Money())
+from regex import Regex
+bot.add_cog(Regex())
+
+def clear_synth():
+    try:
+        shutil.rmtree("synth")
+    except:
+        pass
+    try:
+        os.mkdir("synth")
+    except:
+        pass
+
+clear_synth()
 
 def catnese(word, uid):
     sp=re.findall("."*randint(2,4),word)
@@ -114,6 +134,12 @@ async def exit(ctx):
 
 @bot.command()
 @c.is_owner()
+async def clear_cache(ctx):
+    """Owner only; cache clear command."""
+    clear_synth()
+
+@bot.command()
+@c.is_owner()
 async def reload(ctx):
     """Reload the translations."""
     localize.update()
@@ -140,6 +166,9 @@ def _req2(url):
         return None
     else:
         return resp.text
+
+def itime():
+    return int(time.time())
 
 async def translater(ctx,lang="ja",txt=None):
     uid=ctx.author.id
@@ -169,6 +198,27 @@ async def translater(ctx,lang="ja",txt=None):
 async def translate(ctx,lang="ja",txt=None):
     """ 翻訳機能 """
     await translater(ctx,lang,txt)
+
+SYNTH_LIMIT=0
+
+@bot.command()
+async def tts(ctx, text, gender='male', locale='ja-JP'):
+    """音声合成です"""
+    global SYNTH_LIMIT
+    uid=ctx.author.id
+    if SYNTH_LIMIT+20 > itime():
+        await ctx.send(_("tts.rateLimit", uid))
+        return
+    async with ctx.message.channel.typing():
+        text=quote(text)
+        url=f"https://synthesis-service.scratch.mit.edu/synth?locale={locale}&gender={gender}&text={text}"
+        filename=f"./synth/{itime()}.mp3"
+        with open(filename, 'wb') as f:
+            stream(f, url)
+        with open(filename, 'rb') as f2:
+            dfile=d.File(f2, 'text2speech.mp3')
+            await ctx.send(file=dfile)
+    SYNTH_LIMIT=itime()
 
 @bot.command()
 async def scratchnews(ctx):
@@ -478,6 +528,9 @@ async def morize(ctx):
     try:
         mee=await bot.wait_for('message', check=chk, timeout=30)
         await ctx.send(_("memorize.good", uid, mee.author.mention))
+        mo=Money().getum(mee.author.id)
+        mo+=20
+        Money().setum(mee.author.id, mo)
         MEMORIZING=False
         return
     except asyncio.TimeoutError:
