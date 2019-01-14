@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<help>
+    <meta>
+        <title>Main Page</title>
+        <desc>Welcome to GigaAppleBot's Help!</desc>
+        <url>https://apple502j.github.io/</url>
+        <thumb>https://apple502j.github.io/img/me.png</thumb>
+    </meta>
+    <sections>
+        <section title="Welcome!">
+            Welcome to GigaAppleBot's Help! You can find informations about this bot here. To get help of a specific command, use `me:help [command]`.
+        </section>
+        <section title="Available Commands">
+            These commands are available for everyone: `help`, `setlang`, `hello`, `translate`, `tts`, `scratchnews`, `newpost`, `newposttopic`, `eqinfo`, `ghissue`, `birthday`, `morize`
+        </section>
+        <section title="Available Module Commands">
+            Module commands can be used like `me:money wallet`. To find help of them, specify by using hyphen. (like `me:help money-wallet`) These module commands are available for everyone: `money wallet`, `money give`, `money bet`, `regex sub`, `regex valid`, `regex match`
+        </section>
+        <section title="Owner Commands">
+            These commands are for owner. `exit`, `votefornick`, `clear_cache`, `reload`, `demojy`
+        </section>
+    </sections>
+</help>

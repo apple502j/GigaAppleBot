@@ -79,5 +79,6 @@
     "regex.valid":"この正規表現は有効です。",
     "regex.invalid":"この正規表現はどこかがおかしいです。",
     "regex.empty":"(空)",
-    "tts.rateLimit":"TTSコマンド間は30秒待ってください!"
+    "tts.rateLimit":"TTSコマンド間は30秒待ってください!",
+    "help.invalid":"ヘルプ名がおかしいです"
 }

@@ -21,8 +21,7 @@ from emojiflags import lookup as ec
 from localize import _
 import localize
 from util import stream
-
-
+from xmlhelp import all_in_one as get_help_embed
 
 with open("token.txt") as tkn:
     TOKEN=tkn.read().strip()
@@ -33,7 +32,7 @@ FORUMLIMIT = 0
 GHLIMIT = 0
 localize.update()
 localize.getlocale(0)
-bot = c.Bot(command_prefix="me:", pm_help=True, activity=d.Activity(name="me:help Icon by kazuta123",
+bot = c.Bot(command_prefix="me:", activity=d.Activity(name="me:help Icon by kazuta123",
                                                                     type=d.ActivityType.watching))
 
 from money import Money
@@ -113,6 +112,14 @@ async def on_message(msg):
         await ctx.send(reply)
     await bot.invoke(ctx)
 
+bot.remove_command('help')
+@bot.command()
+async def help(ctx, name='core'):
+    """ヘルプです"""
+    if True:
+        await ctx.send(embed=get_help_embed(name))
+    if False:
+        await ctx.send(_("help.invalid", ctx.author.id))
 
 @bot.command()
 async def setlang(ctx, l="ja"):
@@ -146,6 +153,7 @@ async def reload(ctx):
     localize.getlocale(0)
 
 @bot.command()
+@c.is_owner()
 async def demojy(ctx, emj):
     """テスト用: Demojy"""
     await ctx.send(f"`{emojy.demojize(emj)}`")
@@ -539,6 +547,7 @@ async def morize(ctx):
         return
 
 @bot.command()
+@c.is_owner()
 async def votefornick(ctx, newname):
     """過去の遺物"""
     return

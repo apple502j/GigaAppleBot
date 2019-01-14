@@ -1,5 +1,6 @@
 token.txt
-*.json
+money.json
+userdata.json
 Thumbs.db
 __pycache__
 *.pyc

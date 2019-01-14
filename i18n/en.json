@@ -79,5 +79,6 @@
     "regex.valid":"This regex is valid.",
     "regex.invalid":"This regex is not valid.",
     "regex.empty":"(Empty)",
-    "tts.rateLimit":"Please wait for 30 seconds between TTS command!"
+    "tts.rateLimit":"Please wait for 30 seconds between TTS command!",
+    "help.invalid":"Invalid Help name"
 }

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<help>
+    <meta>
+        <title>me:help</title>
+        <desc>Shows Help message.</desc>
+        <thumb>https://apple502j.github.io/img/me.png</thumb>
+    </meta>
+    <sections>
+        <section title="Usage">
+            This shows the help message of this bot. You may specify the document you're looking for by using the first argument, like `me:help help` (yes, it shows this). If the help message does not exist, it will result in error. **Help message is always in English.**
+        </section>
+        <section title="For Developers">
+            This help is written in a XML file. For more information, see GigaAppleBot's source code.
+        </section>
+    </sections>
+</help>
