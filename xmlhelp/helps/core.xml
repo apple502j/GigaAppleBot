@@ -11,7 +11,7 @@
             Welcome to GigaAppleBot's Help! You can find informations about this bot here. To get help of a specific command, use `me:help [command]`.
         </section>
         <section title="Available Commands">
-            These commands are available for everyone: `help`, `setlang`, `hello`, `translate`, `tts`, `scratchnews`, `newpost`, `newposttopic`, `eqinfo`, `ghissue`, `birthday`, `morize`
+            These commands are available for everyone: `help`, `setlang`, `hello`, `translate`, `tts`, `scratchnews`, `newpost`, `newposttopic`, `eqinfo`, `ghissue`, `birthday`, `morize`, `ping`
         </section>
         <section title="Available Module Commands">
             Module commands can be used like `me:money wallet`. To find help of them, specify by using hyphen. (like `me:help money-wallet`) These module commands are available for everyone: `money wallet`, `money give`, `money bet`, `regex sub`, `regex valid`, `regex match`

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<help>
+    <meta>
+        <title>me:setlang</title>
+        <desc>A command to set your locale.</desc>
+    </meta>
+    <sections>
+        <section title="Usage">
+            This command changes your locale. Currently, `en` and `ja` are supported. The default is `ja`. Use this like `me:setlang en`. NOTE: this help is always in English.
+        </section>
+    </sections>
+</help>

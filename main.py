@@ -163,6 +163,19 @@ async def hello(ctx):
     """ こんにちわんこ。 """
     await ctx.send(_("bot.hello", ctx.author.id))
 
+@bot.command()
+async def ping(ctx):
+    """Ping!"""
+    now_dt=datetime.utcnow()
+    now=now_dt.timestamp()
+    uid=ctx.author.id
+    rt=ctx.message.created_at.timestamp()
+    now2_dt=datetime.utcnow()
+    now2=now2_dt.timestamp()
+    msg = await ctx.send(_("ping.receive", uid, int(abs(now-rt)*1000)/1000))
+    st=msg.created_at.timestamp()
+    await msg.edit(content=msg.content+'\n'+_("ping.sent", uid, int(abs(now2-st)*1000)/1000))
+
 def _req2(url):
     CHROME="Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
     resp=requests.get(url, headers={

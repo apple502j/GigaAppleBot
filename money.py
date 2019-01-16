@@ -54,6 +54,9 @@ class Money:
         """"お金をあげる"""
         uid=str(ctx.author.id)
         mntn=m2m(mention, ctx)
+        if mntn.bot:
+            await ctx.send(_("money.bot", uid))
+            return
         try:
             k=await self.valid(ctx, uid,k)
         except:
