@@ -6,11 +6,13 @@ import discord as d
 
 from localize import _
 import localize
-from util import m2m
+from util import m2m, isonline
 
 class Money:
-    def __init__(self):
+    def __init__(self, bot, mtj):
         self._mdict={}
+        self.bot=bot
+        self.mtj=mtj
 
     @group()
     async def money(self, ctx):
@@ -53,7 +55,11 @@ class Money:
     async def give(self, ctx, mention, k):
         """"お金をあげる"""
         uid=str(ctx.author.id)
-        mntn=m2m(mention, ctx)
+        try:
+            mntn=m2m(mention, ctx)
+        except:
+            await ctx.send(_("money.give.maybeTransfer", uid))
+            return
         if mntn.bot:
             await ctx.send(_("money.bot", uid))
             return
@@ -98,3 +104,45 @@ class Money:
         k*=rate
         self.setum(uid, int(m+k))
         await ctx.send(_("money.bet.done",uid))
+
+    @money.command()
+    async def rate(self, ctx):
+        """為替のレート"""
+        global MONEY_EXCHANGE
+        uid=str(ctx.author.id)
+        s=""
+        for k in MONEY_EXCHANGE:
+            mntn="<@{0}>".format(MONEY_EXCHANGE[k]["id"])
+            s+="{0}: 1ABK={1}{2}\n".format(mntn, MONEY_EXCHANGE[k]["rate"], k)
+        await ctx.send(_("money.rate.rate", uid, s))
+
+    @money.command()
+    async def transfer(self, ctx, newbot, k):
+        """Kを転送します"""
+        MONEY_EXCHANGE=self.mtj["available"]
+        uid=str(ctx.author.id)
+        if newbot not in MONEY_EXCHANGE.keys():
+            await ctx.send(_("money.transfer.unknownbot", uid, _("bot.sep", uid).join(
+            list(MONEY_EXCHANGE.keys())
+            )))
+            return
+        try:
+            k=await self.valid(ctx, uid, k)
+        except:
+            return
+        user_k=self.getum(uid)
+        if user_k < k:
+            await ctx.send(_("money.over",uid))
+            return
+        if not self.bot.get_channel(MONEY_EXCHANGE[newbot]["channel"]):
+            await ctx.send(_("money.transfer.error", uid, "INVALID_CH"))
+            return
+        if not isonline(self.bot.get_channel(MONEY_EXCHANGE[newbot]["channel"]).guild.get_member(MONEY_EXCHANGE[newbot]["id"])):
+            await ctx.send(_("money.transfer.sleeping", uid))
+            return
+
+        self.setum(uid, user_k-k)
+        channel = self.bot.get_channel(MONEY_EXCHANGE[newbot]["channel"])
+        rated_k=str(k*MONEY_EXCHANGE[newbot]["rate"])
+        await channel.send(embed=d.Embed(title=uid, description=rated_k))
+        await ctx.send(_("money.transfer.sent", uid))

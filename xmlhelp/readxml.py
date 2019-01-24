@@ -5,8 +5,12 @@ import discord as d
 def read_xml(name):
     if re.match(r"[./\\]", name):
         raise ValueError
-    with open(f"./xmlhelp/helps/{name}.xml", "r") as f:
-        return f.read()
+    try:
+        with open(f"./xmlhelp/helps/{name}.xml", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        with open(f"./xmlhelp/default.xml", "r") as f:
+            return f.read()
 
 class HelpSection:
     def __init__(self, title, content):

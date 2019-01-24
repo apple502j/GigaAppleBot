@@ -7,3 +7,5 @@ __pycache__
 *.zip
 *.bat
 synth
+temp.py
+money_transfer.json

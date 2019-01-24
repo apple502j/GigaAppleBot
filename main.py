@@ -1,26 +1,29 @@
 from datetime import datetime # logger time
 import sys
 from random import randint, shuffle # random color
+from random import choice as randchoice
 from html import escape, unescape # parse html
 import re
 import os
 import shutil
+import traceback
 import time # system timestamp
 from urllib.parse import quote
 import json # parse json value
 import asyncio # await/async
 import requests # internet requests
 import github3 # GitHub
-from bs4 import BeautifulSoup # parser
+import bs4
 import scratchapi2 # scratch news
 from discord.ext import commands as c # bot commands
 import discord as d # discord main
 import eqapi # earthquake
 import emoji as emojy
+import mw_api_client as mwc
 from emojiflags import lookup as ec
 from localize import _
 import localize
-from util import stream
+from util import stream, sortstr
 from xmlhelp import all_in_one as get_help_embed
 
 with open("token.txt") as tkn:
@@ -30,13 +33,17 @@ SCRATCHLIMIT = 0
 P2PLIMIT = 0
 FORUMLIMIT = 0
 GHLIMIT = 0
+with open("money_transfer.json", "r") as mtj:
+    MONEY_TRANSFER_INFO = json.load(mtj)
+with open("longwords.json", "r") as lwj:
+    LONG_WORDS = json.load(lwj)
 localize.update()
 localize.getlocale(0)
 bot = c.Bot(command_prefix="me:", activity=d.Activity(name="me:help Icon by kazuta123",
                                                                     type=d.ActivityType.watching))
 
 from money import Money
-bot.add_cog(Money())
+bot.add_cog(Money(bot=bot, mtj=MONEY_TRANSFER_INFO))
 from regex import Regex
 bot.add_cog(Regex())
 
@@ -99,6 +106,29 @@ async def on_raw_reaction_add(ev):
         await channel.send(catnese(text, uid))
         return
 
+@bot.event
+async def on_message_edit(old, new):
+    msg=new
+    if not msg.author.bot:
+        print("not bot")
+        return
+    if msg.channel.id not in MONEY_TRANSFER_INFO["watch"]:
+        print("not gab channel")
+        return
+    if not new.embeds:
+        print("not embedded")
+        return
+    embed=new.embeds[0]
+    author=msg.author
+    try:
+        uid=int(embed.title)
+    except ValueError:
+        print("not money embed")
+        return
+    adds_k=int(embed.description)
+    #if author.id == 479964847912648705: #GAB
+    if True:
+        Money(bot, MONEY_TRANSFER_INFO).setum(uid, Money(bot, MONEY_TRANSFER_INFO).getum(uid)+adds_k)
 
 @bot.event
 async def on_message(msg):
@@ -293,11 +323,11 @@ class GenericData(object):
     __str__ = __repr__
 
 def _parsefeed(feed):
-    soup = BeautifulSoup(feed, "lxml-xml")
+    soup = bs4.BeautifulSoup(feed, "lxml-xml")
     entries = soup.find_all("entry")
     arr = []
     for entry in entries:
-        summary=BeautifulSoup(unescape(entry.summary.string), "html.parser").get_text().strip()
+        summary=bs4.BeautifulSoup(unescape(entry.summary.string), "html.parser").get_text().strip()
         if len(summary)>97:
             summary=summary[0:97]+"..."
         arr.append(GenericData(
@@ -470,12 +500,90 @@ async def ghissue(ctx, un="llk", repo="scratch-gui"):
                         description=_("github.description", uid),
                         color=randint(0,0xFFFFFF))
         embed.add_field(name=_("github.issueTitle", uid), value=clampstr(issue.title,97) or "Error", inline=True)
-        embed.add_field(name=_("github.issueContent", uid), value=clampstr(BeautifulSoup(issue.body,"html.parser").get_text(),97) or _("github.error", uid), inline=True)
+        embed.add_field(name=_("github.issueContent", uid), value=clampstr(bs4.BeautifulSoup(issue.body,"html.parser").get_text(),97) or _("github.error", uid), inline=True)
         embed.add_field(name=_("github.issueAuthor", uid), value=issue.user or _("github.error", uid), inline=True)
         embed.add_field(name=_("github.issueDate", uid), value=issue.created_at or _("github.error", uid), inline=True)
         embed.add_field(name=_("github.issueLabel", uid), value=",".join(list(map(str, list(issue.labels())))) or _("github.none", uid), inline=True)
         embed.add_field(name=_("github.url", uid), value=issue.html_url or _("github.error", uid), inline=True)
         await ctx.send(embed=embed)
+
+@bot.command()
+@c.cooldown(1, 60)
+async def wiki(ctx, page, wikicode='ja'):
+    """Japanese Scratch-Wikiのページを取得します。"""
+    uid=ctx.author.id
+    wikidic={
+        "ja": "https://ja.scratch-wiki.info/w/api.php",
+        "en": "https://en.scratch-wiki.info/w/api.php",
+        "enwp": "https://en.wikipedia.org/w/api.php",
+        "ep": "https://enpedia.rxy.jp/w/api.php"
+    }
+    async with ctx.message.channel.typing():
+        try:
+            jaw=mwc.Wiki(wikidic.get(wikicode, wikidic["ja"]), "GigaAppleBot (only read)")
+            pg=jaw.page(page)
+            await ctx.trigger_typing()
+            first=list(pg.revisions(limit=1, rvdir="newer"))[0]
+            await ctx.trigger_typing()
+            try:
+                await ctx.trigger_typing()
+                scratch_user=scratchapi2.User(first.user)
+                icon_url=scratch_user.images["60x60"]
+            except:
+                #Bots
+                icon_url="https://cdn2.scratch.mit.edu/get_image/user/default_60x60.png"
+            page_url="https://ja.scratch-wiki.info/wiki/{0}".format(quote(page))
+            userpage_url="https://ja.scratch-wiki.info/w/index.php?title={0}&action=history".format(quote(page))
+            await ctx.trigger_typing()
+            page_parsed=jaw.request(
+                action="parse",
+                page=page,
+                prop="images|parsetree"
+            )["parse"]
+            try:
+                img=page_parsed["images"][0]
+                await ctx.trigger_typing()
+                img_url=list(jaw.request(
+                    action="query",
+                    prop="imageinfo",
+                    titles="File:{0}".format(img),
+                    iiprop="url"
+                )["query"]["pages"].values())[0]["imageinfo"][0]["url"]
+            except IndexError:
+                img_url=None
+            await ctx.trigger_typing()
+            page_content_xmled=bs4.BeautifulSoup(page_parsed["parsetree"]["*"],"xml")
+            page_content_str=""
+            for maybe_tag in page_content_xmled.find("root").contents:
+                if type(maybe_tag) is bs4.element.NavigableString:
+                    page_content_str+=str(maybe_tag)
+            page_content_str=re.sub("\n+", "\n", page_content_str)
+            page_content_str=re.sub("''(?P<italic>[^']+)'","*\g<italic>*",page_content_str)
+            page_content_str=re.sub("'''(?P<bold>[^']+)'''","**\g<bold>**",page_content_str)
+            page_content_str=re.sub("\[\[(File|ファイル|file)[^]]+\]\]","",page_content_str)
+            page_content_embed=clampstr(page_content_str,500)
+            await ctx.trigger_typing()
+            embed=d.Embed(
+                title=page,
+                description=_("jawiki.desc", uid),
+                url=page_url,
+                color=randint(0,0xFFFFFF)
+            )
+            if img_url:
+                embed.set_thumbnail(url=img_url)
+            embed.set_author(name=_("jawiki.author",uid,first.user), url=userpage_url, icon_url=icon_url)
+            embed.set_footer(text="Content is under CC BY-SA 4.0", icon_url="http://u.cubeupload.com/apple502j/sqhJHk.png")
+            embed.add_field(name=_("jawiki.content",uid), value=page_content_embed, inline=False)
+            await ctx.send(embed=embed)
+
+        except Exception as e:
+            try:
+                traceback.print_exc()
+                err_d=e.__class__().__repr__().replace("()","")
+                await ctx.send(_("jawiki.error", uid, err_d))
+                return
+            except:
+                raise e
 
 @bot.command()
 async def birthday(ctx, person="Abe Shinzo"):
@@ -512,7 +620,7 @@ async def morize(ctx):
     global MEMORIZING
     uid=ctx.author.id
     if MEMORIZING:
-        await ctx.send(_("memorize.otherGame", uid))
+        await ctx.send(_("game.otherGame", uid))
         return
     MEMORIZING=True
     LC=[":dollar_banknote:",":yen_banknote:",":euro_banknote:",":pound_banknote:"]
@@ -548,15 +656,54 @@ async def morize(ctx):
     await ctx.send(_("memorize.send", uid))
     try:
         mee=await bot.wait_for('message', check=chk, timeout=30)
-        await ctx.send(_("memorize.good", uid, mee.author.mention))
-        mo=Money().getum(mee.author.id)
+        await ctx.send(_("game.good", uid, mee.author.mention))
+        mo=Money(bot, MONEY_TRANSFER_INFO).getum(mee.author.id)
         mo+=20
-        Money().setum(mee.author.id, mo)
+        Money(bot, MONEY_TRANSFER_INFO).setum(mee.author.id, mo)
         MEMORIZING=False
         return
     except asyncio.TimeoutError:
-        await ctx.send(_("memorize.answer", uid, ankey))
+        await ctx.send(_("game.answer", uid, ankey))
         MEMORIZING=False
+        return
+
+LONGWORDING = False
+@bot.command()
+async def longandright(ctx, level):
+    """長い単語を正しくつづろう"""
+    global LONGWORDING
+    uid=ctx.author.id
+    try:
+        level=int(level)
+        assert level in (1,2,3)
+    except:
+        await ctx.send(_("longandright.invalidLv", uid))
+        return
+    if LONGWORDING:
+        await ctx.send(_("game.otherGame", uid))
+        return
+    else:
+        LONGWORDING=True
+    lvwords=LONG_WORDS["words"][level-1]
+    word=randchoice(lvwords)
+    sorted_word=sortstr(word)
+    await ctx.send(_("longandright.word", uid, sorted_word))
+    def chk(ms):
+        return (
+            ms.channel==ctx.message.channel and
+            ms.content==word
+            )
+    try:
+        mee=await bot.wait_for('message', check=chk, timeout=30)
+        await ctx.send(_("game.good", uid, mee.author.mention))
+        mo=Money(bot, MONEY_TRANSFER_INFO).getum(mee.author.id)
+        mo+=(level * 20)
+        Money(bot, MONEY_TRANSFER_INFO).setum(mee.author.id, mo)
+        LONGWORDING=False
+        return
+    except asyncio.TimeoutError:
+        await ctx.send(_("game.answer", uid, word))
+        LONGWORDING=False
         return
 
 @bot.command()
