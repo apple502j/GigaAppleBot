@@ -95,5 +95,9 @@
     "jawiki.error":"Error occured: {0}",
     "jawiki.desc":"From Japanese Scratch-Wiki",
     "jawiki.author":"{0} and more",
-    "jawiki.content":"Content"
+    "jawiki.content":"Content",
+    "here.DM":"This command does not work on DM.",
+    "here.noGuild":"This command does not work on this server.",
+    "here.noRole":"A role which is required to run this is missing.",
+    "here.mention":"Notify all online member which accpets anytime-mention:\n"
 }

@@ -95,5 +95,9 @@
     "jawiki.error":"エラー発生: {0}",
     "jawiki.desc":"Japanese Scratch-Wikiより",
     "jawiki.author":"{0}など",
-    "jawiki.content":"内容"
+    "jawiki.content":"内容",
+    "here.DM":"このコマンドはDMで動きません。",
+    "here.noGuild":"このコマンドはこのサーバーでは動きません。",
+    "here.noRole":"必要なRoleが見当たりません。",
+    "here.mention":"いつでもメンションOKなユーザー(オンラインのみ)に通知:\n"
 }

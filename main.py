@@ -194,6 +194,30 @@ async def hello(ctx):
     await ctx.send(_("bot.hello", ctx.author.id))
 
 @bot.command()
+async def here(ctx):
+    """@here"""
+    GUILDID = 497978199087775754
+    ROLEID = 499905665637023786
+    uid=ctx.author.id
+    try:
+        guild=ctx.message.channel.guild
+    except AttributeError:
+        await ctx.send(_("here.DM", uid))
+        return
+    if guild.id != GUILDID:
+        await ctx.send(_("here.noGuild", uid))
+        return
+    role = guild.get_role(ROLEID)
+    if not role:
+        await ctx.send(_("here.noRole", uid))
+        return
+    mntn = _("here.mention", uid)
+    for member in role.members:
+        if member.status in (d.Status.online, d.Status.idle):
+            mntn += '{0}\n'.format(member.mention)
+    await ctx.send(mntn)
+
+@bot.command()
 async def ping(ctx):
     """Ping!"""
     now_dt=datetime.utcnow()
