@@ -1,6 +1,9 @@
 import json
 import os
 
+class NoTranslationError(Exception):
+    pass
+
 AVAILABLE = []
 TRDATA = {}
 ULANG = {}
@@ -40,4 +43,7 @@ def _(tid, uid, *args, dft=None):
         try:
             return TRDATA["ja"][tid].format(*args)
         except:
-            raise Exception("Language missing for {0}".format(tid))
+            try:
+                return TRDATA["en"][tid].format(*args)
+            except:
+                raise NoTranslationError("Language missing for {0}".format(tid))

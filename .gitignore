@@ -8,4 +8,8 @@ __pycache__
 *.bat
 synth
 temp.py
-money_transfer.json
+money_transfer*.json
+rules.md
+jobs.py
+wiki_login.txt
+user_badges.json

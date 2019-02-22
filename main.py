@@ -6,14 +6,18 @@ from html import escape, unescape # parse html
 import re
 import os
 import shutil
+import hashlib
 import traceback
+import platform
 import time # system timestamp
 from urllib.parse import quote
 import json # parse json value
 import asyncio # await/async
+import subprocess
 import requests # internet requests
 import github3 # GitHub
 import bs4
+import pypinyin
 import scratchapi2 # scratch news
 from discord.ext import commands as c # bot commands
 import discord as d # discord main
@@ -23,8 +27,28 @@ import mw_api_client as mwc
 from emojiflags import lookup as ec
 from localize import _
 import localize
-from util import stream, sortstr
+from util import stream, sortstr, m2m
 from xmlhelp import all_in_one as get_help_embed
+
+env=platform.system()
+pippy="{0} freeze".format("pip3" if env=="Windows" else "pip3.6")
+sp=subprocess.Popen(pippy, shell=True, stdout=subprocess.PIPE)
+print("Waiting for subprocess...")
+sp.wait()
+versions=sp.stdout.read().decode("utf-8").strip().split()
+VERSION_DICT=[]
+for item in versions:
+    keys=item.split("==", 1)
+    if keys[0] in ('discord.py', 'aiohttp', 'beautifulsoup4', 'certifi', 'chardet',
+                   'cryptography', 'emoji', 'github3.py', 'lxml', 'mw-api-client',
+                   'oauthlib', 'pypinyin', 'requests', 'requests-oauthlib',
+                   'scratchapi2', 'tornado', 'urllib3', 'websockets'):
+        VERSION_DICT.append((keys[0], keys[1]))
+
+HASH_DICT=[]
+for f in ('main', 'eqapi', 'localize', 'money', 'regex', 'util'):
+    with open("{0}.py".format(f), "rb") as fobj:
+        HASH_DICT.append((f, hashlib.md5(fobj.read()).hexdigest()))
 
 with open("token.txt") as tkn:
     TOKEN=tkn.read().strip()
@@ -46,6 +70,8 @@ from money import Money
 bot.add_cog(Money(bot=bot, mtj=MONEY_TRANSFER_INFO))
 from regex import Regex
 bot.add_cog(Regex())
+from whatis import WhatIs
+bot.add_cog(WhatIs(bot=bot))
 
 def clear_synth():
     try:
@@ -110,20 +136,16 @@ async def on_raw_reaction_add(ev):
 async def on_message_edit(old, new):
     msg=new
     if not msg.author.bot:
-        print("not bot")
         return
     if msg.channel.id not in MONEY_TRANSFER_INFO["watch"]:
-        print("not gab channel")
         return
     if not new.embeds:
-        print("not embedded")
         return
     embed=new.embeds[0]
     author=msg.author
     try:
         uid=int(embed.title)
     except ValueError:
-        print("not money embed")
         return
     adds_k=int(embed.description)
     #if author.id == 479964847912648705: #GAB
@@ -136,11 +158,84 @@ async def on_message(msg):
     ctx = await bot.get_context(msg)
     if msg.author.bot == True:
         return
-    if "<@"+str(bot.user.id)+">" in msg.content:
-        #reply = f'{msg.author.mention} 何でしょうか?'
+    if "<@"+str(bot.user.id)+">" in msg.content and getattr(ctx, 'command', None) != 'invite':
         reply = _("bot.reply", msg.author.id, msg.author.mention)
         await ctx.send(reply)
+    if msg.channel.id == 497983550625153024:
+        import jobs
+        jobs.send(msg, bot)
     await bot.invoke(ctx)
+
+class TestException(c.CommandError):
+    pass
+
+@bot.event
+async def on_command_error(ctx, error):
+    uid=ctx.author.id
+    command=getattr(ctx.command, 'name', '')
+    if not command:
+        await ctx.send(_("excs.noCommand", uid))
+        return
+    async def report(name, *args, detail=False, more=None):
+        await ctx.send(_("excs."+name, uid, command, *args))
+        if detail:
+            report_ch=bot.get_channel(543744092014772224)
+            if not report_ch:
+                raise Exception("Cannot report this error")
+            if getattr(ctx, 'guild', None):
+                where='guild {0} channel {1}, message {2}'.format(ctx.guild.id, ctx.channel.id, ctx.message.id)
+            else:
+                where='DM of the user, message {0}'.format(ctx.message.id)
+            more_formatted='\n{0}'.format(more) if more else ''
+            report_ch.send('`{0}` is occured at {1} by {2}{3}\n<!@{4}>'.format(error,where,ctx.author.id, more_formatted, bot.owner_id))
+    if isinstance(error, SystemExit):
+        pass
+    elif isinstance(error, (requests.ConnectionError, requests.HTTPError)):
+        await report("http")
+    elif isinstance(error, TestException):
+        await report("test")
+    elif isinstance(error, c.NoPrivateMessage):
+        await report("noDM")
+    elif isinstance(error, c.CommandOnCooldown):
+        await report("cooldown", round(error.retry_after))
+    elif isinstance(error, c.NotOwner):
+        await report("notOwner", getattr(bot.get_user(bot.owner_id), 'name', _("excs.unknownUser", uid)))
+    elif isinstance(error, c.MissingPermissions):
+        await report("missingPerms", _("bot.sep", uid).join(error.missing_perms))
+    elif isinstance(error, c.BotMissingPermissions):
+        await report("missingBotPerms", _("bot.sep", uid).join(error.missing_perms), ctx.guild.owner.mention if ctx.guild else '')
+    elif isinstance(error, (mwc.excs.WikiError.ratelimited, mwc.excs.WikiError.readapidenied)):
+        await report("fatal", detail=True, more="Rate Limited")
+    elif isinstance(error, localize.NoTranslationError):
+        await report("translation", detail=True, more="Rate Limited")
+
+
+async def member_join_test(you):
+    if you.guild.id != 497978199087775754:
+        return
+    else:
+        await you.create_dm()
+        dm=you.dm_channel
+        await dm.send("ようこそ! 以下のルールを読んでください。")
+        with open("rules.md", "r", encoding="utf-8") as rules:
+            stack=[]
+            prev_txt=''
+            txt=''
+            for l in rules:
+                stack.append(l)
+                prev_txt=txt
+                txt=''.join(stack)
+                if len(txt) > 1900:
+                    await dm.send('```\n{0}\n```'.format(txt))
+                    stack=[l]
+                    prev_txt=''
+                    txt=''
+            if txt != '':
+                await dm.send('```\n{0}\n```'.format(txt))
+
+@bot.event
+async def on_member_join(you):
+    await member_join_test(you)
 
 bot.remove_command('help')
 @bot.command()
@@ -150,6 +245,53 @@ async def help(ctx, name='core'):
         await ctx.send(embed=get_help_embed(name))
     if False:
         await ctx.send(_("help.invalid", ctx.author.id))
+
+@bot.command()
+@c.is_owner()
+async def run(ctx, cmd):
+    cmd=cmd[1:-1]
+    await ctx.send(eval(cmd))
+
+@bot.command('eval')
+@c.is_owner()
+async def eval_(ctx, *, arg):
+    """Execute Python code. Only available to owner."""
+    try:
+        await eval(arg, globals(), locals())
+    except BaseException as e:
+        try:
+            eval(arg, globals(), locals())
+        except BaseException as e:
+            pass
+
+@bot.command()
+async def credits(ctx):
+    uid=ctx.author.id
+    embed=d.Embed(color=d.Color.orange())
+    embed.add_field(name=_("credits.title", uid), value=_("credits.credits", uid), inline=False)
+    await ctx.send(embed=embed)
+
+@bot.command()
+async def status(ctx):
+    """Get status"""
+    uid=ctx.author.id
+    embed=d.Embed(title=_("status.title", uid), color=randint(0, 0xffffff))
+    md5str="```\n"
+    for item in HASH_DICT:
+        md5str+="{0}: {1}\n".format(item[0], item[1])
+    md5str+="```"
+    embed.add_field(name=_("status.md5s", uid), value=md5str, inline=False)
+    ver_str="```\n"
+    for item in VERSION_DICT:
+        ver_str+="{0}: {1}\n".format(item[0], item[1])
+    ver_str+="```"
+    embed.add_field(name=_("status.versions", uid), value=ver_str, inline=False)
+    os_ver=platform.uname()
+    embed.add_field(name=_("status.os", uid), value="{0[0]} {0[2]} ({0[3]})".format(os_ver), inline=False)
+    py_ver=platform.python_version()
+    embed.add_field(name=_("status.python", uid), value=py_ver, inline=False)
+    await ctx.send(embed=embed)
+
 
 @bot.command()
 async def setlang(ctx, l="ja"):
@@ -193,17 +335,34 @@ async def hello(ctx):
     """ こんにちわんこ。 """
     await ctx.send(_("bot.hello", ctx.author.id))
 
+# From kenny2automate
+@bot.command()
+@c.is_owner()
+@c.has_permissions(manage_messages=True, read_message_history=True)
+@c.bot_has_permissions(manage_messages=True, read_message_history=True)
+async def purge(ctx, limit: int = 100, user: d.Member = None, *, matches: str = None):
+	"""Purge all messages, optionally from ``user``
+	or contains ``matches``."""
+	def check_msg(msg):
+		if msg.id == ctx.message.id:
+			return True
+		if user is not None:
+			if msg.author.id != user.id:
+				return False
+		if matches is not None:
+			if matches not in msg.content:
+				return False
+		return True
+	deleted = await ctx.channel.purge(limit=limit, check=check_msg)
+
+@c.guild_only()
 @bot.command()
 async def here(ctx):
     """@here"""
     GUILDID = 497978199087775754
     ROLEID = 499905665637023786
     uid=ctx.author.id
-    try:
-        guild=ctx.message.channel.guild
-    except AttributeError:
-        await ctx.send(_("here.DM", uid))
-        return
+    guild=ctx.guild
     if guild.id != GUILDID:
         await ctx.send(_("here.noGuild", uid))
         return
@@ -229,6 +388,42 @@ async def ping(ctx):
     msg = await ctx.send(_("ping.receive", uid, int(abs(now-rt)*1000)/1000))
     st=msg.created_at.timestamp()
     await msg.edit(content=msg.content+'\n'+_("ping.sent", uid, int(abs(now2-st)*1000)/1000))
+
+@c.guild_only()
+@bot.command()
+async def invite(ctx, mention):
+    """Get invite url of a bot"""
+    mntn=m2m(mention, ctx)
+    uid=ctx.author.id
+    if not (mntn and mntn.bot):
+        await ctx.send(_("invite.notBot", uid))
+        return
+    perms=mntn.guild_permissions
+    url=d.utils.oauth_url(mntn.id, perms)
+    await ctx.author.create_dm()
+    dm=ctx.author.dm_channel
+    warn_text=""
+    if perms.administrator:
+        warn_text=emojy.emojize(_("invite.admin", uid, ":warning:"))
+    else:
+        if (perms.ban_members or perms.kick_members):
+            warn_text+=emojy.emojize(_("invite.kicking", uid, ":warning:"))+"\n"
+        if (perms.manage_channels or perms.manage_messages):
+            warn_text+=emojy.emojize(_("invite.deleteable", uid, ":warning:"))+"\n"
+        if perms.create_instant_invite:
+            warn_text+=emojy.emojize(_("invite.invitation", uid, ":warning:"))+"\n"
+        if (perms.manage_nicknames or perms.mention_everyone):
+            warn_text+=emojy.emojize(_("invite.confusing", uid, ":thinking_face:"))+"\n"
+        if (perms.view_audit_log or perms.read_message_history):
+            warn_text+=emojy.emojize(_("invite.secret", uid, ":Japanese_secret_button:"))+"\n"
+    if warn_text:
+        await dm.send(warn_text)
+    perm_names=_("bot.sep", uid).join(map(lambda val:val[0], filter(lambda val:val[1],sorted(perms, key=lambda val:val[0]))))
+    if perm_names:
+        await dm.send(_("invite.permissions", uid, perm_names))
+    else:
+        await dm.send(_("invite.strangely", uid))
+    await dm.send(embed=d.Embed(description='[{1}]({0})'.format(url, _("invite.click", uid))))
 
 def _req2(url):
     CHROME="Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36"
@@ -270,9 +465,16 @@ async def translater(ctx,lang="ja",txt=None):
         return
 
 @bot.command()
-async def translate(ctx,lang="ja",txt=None):
+async def translate(ctx,lang="ja",*,txt=None):
     """ 翻訳機能 """
-    await translater(ctx,lang,txt)
+    if lang in ('p','pinyin', 'pyn', '拼'):
+        pinyins=list(map(lambda pron: pron.capitalize(), pypinyin.lazy_pinyin(txt)))
+        await ctx.send(' '.join(pinyins))
+    elif lang in ('b','bopo', 'bopomofo', '注'):
+        bopomofos=list(map(lambda pron: pron[0], pypinyin.pinyin(txt, style=pypinyin.Style.BOPOMOFO)))
+        await ctx.send(' '.join(bopomofos))
+    else:
+        await translater(ctx,lang,txt)
 
 SYNTH_LIMIT=0
 
@@ -284,7 +486,7 @@ async def tts(ctx, text, gender='male', locale='ja-JP'):
     if SYNTH_LIMIT+20 > itime():
         await ctx.send(_("tts.rateLimit", uid))
         return
-    async with ctx.message.channel.typing():
+    async with ctx.typing():
         text=quote(text)
         url=f"https://synthesis-service.scratch.mit.edu/synth?locale={locale}&gender={gender}&text={text}"
         filename=f"./synth/{itime()}.mp3"
@@ -487,7 +689,6 @@ async def eqinfo(ctx):
             pem.add_field(name=_("eq.scaleAddress", uid),value=point["addr"])
             pem.add_field(name=_("eq.scale", uid),value=eqapi.eq2level[point["scale"]])
             await ctx.send(embed=pem)
-            print("api posted 1")
     elif type(parsedeq) == eqapi.Tsunami:
         embed = d.Embed(title=_("eq.tsunamiInfo", uid),
                         description="by p2pquake API",
@@ -499,7 +700,6 @@ async def eqinfo(ctx):
                 pem.add_field(name=_("eq.tsunamiAddress", uid),value=point["name"])
                 pem.add_field(name=_("eq.tsunamiLevel", uid),value=eqapi.tinfos[point["grade"]])
                 await ctx.send(embed=pem)
-                print("api posted 1")
 
 def clampstr(s,l):
     s=s.replace("\n","").replace("\r","")
@@ -542,9 +742,17 @@ async def wiki(ctx, page, wikicode='ja'):
         "enwp": "https://en.wikipedia.org/w/api.php",
         "ep": "https://enpedia.rxy.jp/w/api.php"
     }
-    async with ctx.message.channel.typing():
+    async with ctx.channel.typing():
         try:
             jaw=mwc.Wiki(wikidic.get(wikicode, wikidic["ja"]), "GigaAppleBot (only read)")
+            await ctx.trigger_typing()
+            try:
+                with open("wiki_login.txt", "r", encoding="utf-8") as pwd:
+                    user=pwd.readline()
+                    passwd=pwd.readline()
+                    jaw.login(user, passwd)
+            except:
+                pass # This is not required
             pg=jaw.page(page)
             await ctx.trigger_typing()
             first=list(pg.revisions(limit=1, rvdir="newer"))[0]
@@ -610,7 +818,7 @@ async def wiki(ctx, page, wikicode='ja'):
                 raise e
 
 @bot.command()
-async def birthday(ctx, person="Abe Shinzo"):
+async def birthday(ctx, *, person="Abe Shinzo"):
     """ 誕生日 """
     uid=ctx.author.id
     RQHEAD={"User-Agent":"GigaAppleBot via requests (apple502j)"}
@@ -671,10 +879,8 @@ async def morize(ctx):
     time.sleep(3)
     await msg.delete()
     def chk(ms):
-        #print(emojy.demojize(ms.content))
-        #print(emojy.demojize(ankey))
         return (
-            ms.channel==ctx.message.channel and
+            ms.channel==ctx.channel and
             ms.content.replace(" ","")==ankey
             )
     await ctx.send(_("memorize.send", uid))
@@ -714,7 +920,7 @@ async def longandright(ctx, level):
     await ctx.send(_("longandright.word", uid, sorted_word))
     def chk(ms):
         return (
-            ms.channel==ctx.message.channel and
+            ms.channel==ctx.channel and
             ms.content==word
             )
     try:
@@ -731,60 +937,55 @@ async def longandright(ctx, level):
         return
 
 @bot.command()
-@c.is_owner()
-async def votefornick(ctx, newname):
-    """過去の遺物"""
-    return
+@c.cooldown(1, 120, type=c.BucketType.user)
+@c.bot_has_permissions(read_message_history=True, add_reactions=True, manage_messages=True)
+async def pk(ctx):
     uid=ctx.author.id
-    UP=":thumbs_up:"
-    DOWN=":thumbs_down:"
-    cnick=bot.user.display_name
-    newnick=newname
-    class FAKE:
-        count=0
-    if cnick == newname:
-        await ctx.send(_("vfn.same",uid))
-        return
-    if scratchapi2.Misc().username_available(re.sub(r"[^a-zA-Z0-9-_]","",newnick) or "hoge") == "bad username":
-        await ctx.send(_("vfn.badword",uid))
-        return
-    ms=await ctx.send(_("vfn.vote", uid, ctx.author.display_name, cnick, newnick))
-    await ms.add_reaction(emojy.emojize(UP))
-    await ms.add_reaction(emojy.emojize(DOWN))
-    """
-    def chk(r,u):
-        mss=r.message
-        if mss.id!=ms.id:
-            return 0
-
-        print(mss.reactions)
-        upcount=d.utils.get(mss.reactions, emoji=emojy.emojize(UP)).count - 1
-        downcount=d.utils.get(mss.reactions, emoji=emojy.emojize(DOWN)).count - 1
-        return upcount+downcount > 2
-
-    try:
-        await bot.wait_for("reaction_add", timeout=120, check=chk)
-        upcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(UP)) or FAKE).count - 1
-        downcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(DOWN)) or FAKE).count - 1
-        if upcount > downcount:
-            await ctx.send(_("vfn.changed", uid))
-            await ctx.message.channel.guild.me.edit(nick=newname)
+    win=False
+    emojis=[emojy.emojize(e) for e in (':up-left_arrow:', ':fast_up_button:', ':upwards_button:', ':up_arrow:', ':up-right_arrow:')]
+    msg = await ctx.send(_("pk.wait", uid))
+    pk=randint(0, 4)
+    print(f"cheat: {pk}")
+    pk_emoji=""
+    for i in range(5):
+        if i == pk:
+            pk_emoji += emojy.emojize(":heavy_large_circle:")
         else:
-            await ctx.send(_("vfn.notChanged",uid, newnick))
-    except asyncio.TimeoutError:
-        await ctx.send(_("vfn.notChanged",uid))
-    """
-    print(ms)
-    #print(ms.reactions)
-    time.sleep(5)
-    #print(ms.reactions)
-    upcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(UP)) ).count - 1
-    downcount=(d.utils.get(ms.reactions, emoji=emojy.emojize(DOWN)) ).count - 1
-    if (upcount + downcount) > 0 and (upcount > downcount):
-        await ctx.send(_("vfn.changed", uid))
-        await ctx.message.channel.guild.me.edit(nick=newname)
-    else:
-        await ctx.send(_("vfn.notChanged",uid))
+            pk_emoji += emojy.emojize(":cross_mark:")
+    def chk(r):
+        return str(r.emoji) in emojis and r.message_id == msg.id and r.user_id == uid
+    async with ctx.typing():
+        for emoji in emojis:
+            await msg.add_reaction(emoji)
+        embed=d.Embed(title=_("pk.title", uid), description=_("pk.situation", uid), color=randint(0, 0xffffff))
+        embed.set_image(url="http://u.cubeupload.com/apple502j/ljPH7f.png")
+        await msg.edit(embed=embed)
+    try:
+        r = await bot.wait_for("raw_reaction_add", check=chk, timeout=60)
+        await msg.remove_reaction(str(r.emoji), ctx.author)
+        chosen = emojis.index(str(r.emoji))
+        pk_emoji = ""
+        for i in range(5):
+            if i == pk:
+                pk_emoji += emojy.emojize(":heavy_large_circle:")
+            elif i == chosen:
+                pk_emoji += emojy.emojize(":soccer_ball:")
+            else:
+                pk_emoji += emojy.emojize(":cross_mark:")
+        embed.add_field(name=_("pk.shoot", uid), value=pk_emoji)
+        await msg.edit(embed=embed)
+        if pk == chosen:
+            win=True
+            mo=Money(bot, MONEY_TRANSFER_INFO).getum(ctx.author.id)
+            mo+=10
+            Money(bot, MONEY_TRANSFER_INFO).setum(ctx.author.id, mo)
+    except a.TimeoutError:
+        await ctx.send(_("pk.timeout",uid))
+        embed.add_field(name=_("pk.shoot", uid), value=pk_emoji)
+        await msg.edit(embed=embed)
+    await ctx.send(_("pk.gameEnded", uid))
+    if win:
+        await ctx.send(_("pk.win", uid))
 
 print("Do")
 bot.run(TOKEN)

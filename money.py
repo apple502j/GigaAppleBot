@@ -1,7 +1,7 @@
 """A module that can handle money."""
 import json
 from random import randint
-from discord.ext.commands import group
+from discord.ext.commands import group, guild_only
 import discord as d
 
 from localize import _
@@ -51,13 +51,13 @@ class Money:
         await ctx.author.create_dm()
         await ctx.author.dm_channel.send(embed=embed)
 
+    @guild_only()
     @money.command()
     async def give(self, ctx, mention, k):
         """"お金をあげる"""
         uid=str(ctx.author.id)
-        try:
-            mntn=m2m(mention, ctx)
-        except:
+        mntn=m2m(mention, ctx)
+        if not mntn:
             await ctx.send(_("money.give.maybeTransfer", uid))
             return
         if mntn.bot:
@@ -71,7 +71,7 @@ class Money:
         if not mntn or (mntn==ctx.author and muid!='398412979067944961'):
             await ctx.send(_("money.give.author", uid))
             return
-        limit=not (uid == '398412979067944961' or ctx.author.permissions_in(ctx.message.channel).administrator)
+        limit=not (uid == '398412979067944961' or ctx.author.permissions_in(ctx.channel).administrator)
         if limit:
             m=self.getum(uid)
             if k>m:
