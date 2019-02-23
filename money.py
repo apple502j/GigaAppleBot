@@ -20,14 +20,14 @@ class Money:
 
     def getum(self, uid):
         uid=str(uid)
-        with open("money.json",encoding="utf-8") as f:
+        with open("./settings/money.json",encoding="utf-8") as f:
             self._mdict=json.load(f)
         return int(self._mdict.get(uid,0))
 
     def setum(self, uid, to):
         uid=str(uid)
         self._mdict[uid]=int(to)
-        with open("money.json","w",encoding="utf-8") as f:
+        with open("./settings/money.json","w",encoding="utf-8") as f:
             json.dump(self._mdict, f)
 
     @staticmethod

@@ -50,14 +50,14 @@ for f in ('main', 'eqapi', 'localize', 'money', 'regex', 'util'):
     with open("{0}.py".format(f), "rb") as fobj:
         HASH_DICT.append((f, hashlib.md5(fobj.read()).hexdigest()))
 
-with open("token.txt") as tkn:
+with open("./settings/token.txt") as tkn:
     TOKEN=tkn.read().strip()
 TRANSLATELIMIT = 0
 SCRATCHLIMIT = 0
 P2PLIMIT = 0
 FORUMLIMIT = 0
 GHLIMIT = 0
-with open("money_transfer.json", "r") as mtj:
+with open("./settings/money_transfer.json", "r") as mtj:
     MONEY_TRANSFER_INFO = json.load(mtj)
 with open("longwords.json", "r") as lwj:
     LONG_WORDS = json.load(lwj)
@@ -217,7 +217,7 @@ async def member_join_test(you):
         await you.create_dm()
         dm=you.dm_channel
         await dm.send("ようこそ! 以下のルールを読んでください。")
-        with open("rules.md", "r", encoding="utf-8") as rules:
+        with open("./settings/rules.md", "r", encoding="utf-8") as rules:
             stack=[]
             prev_txt=''
             txt=''
@@ -747,7 +747,7 @@ async def wiki(ctx, page, wikicode='ja'):
             jaw=mwc.Wiki(wikidic.get(wikicode, wikidic["ja"]), "GigaAppleBot (only read)")
             await ctx.trigger_typing()
             try:
-                with open("wiki_login.txt", "r", encoding="utf-8") as pwd:
+                with open("./settings/wiki_login.txt", "r", encoding="utf-8") as pwd:
                     user=pwd.readline()
                     passwd=pwd.readline()
                     jaw.login(user, passwd)
@@ -936,7 +936,7 @@ async def longandright(ctx, level):
         LONGWORDING=False
         return
 
-@bot.command()
+@bot.command(name='penalty')
 @c.cooldown(1, 120, type=c.BucketType.user)
 @c.bot_has_permissions(read_message_history=True, add_reactions=True, manage_messages=True)
 async def pk(ctx):

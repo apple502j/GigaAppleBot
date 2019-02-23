@@ -20,7 +20,7 @@ def update():
 def getlocale(uid):
     global ULANG
     uid=str(uid)
-    with open("userdata.json", "r", encoding="utf-8") as f:
+    with open("./settings/userdata.json", "r", encoding="utf-8") as f:
         ULANG=json.load(f)
     return ULANG.get(uid, "ja")
 
@@ -29,7 +29,7 @@ def setlocale(uid, l):
     uid=str(uid)
     getlocale(uid) # Update the list
     ULANG[uid]=l
-    with open("userdata.json","w", encoding="utf-8") as f:
+    with open("./settings/userdata.json","w", encoding="utf-8") as f:
         json.dump(ULANG, f)
 
 def _(tid, uid, *args, dft=None):

@@ -27,13 +27,13 @@ class WhatIs:
     @detail.command()
     @c.is_owner()
     async def set(self, ctx, u:str, n:int, h:str):
-        with open("user_badges.json", "r", encoding="utf-8") as badges:
+        with open("./settings/user_badges.json", "r", encoding="utf-8") as badges:
             badge_json=json.load(badges)
         badge_json[u]={}
         badge_json[u]["nitro"]=bool(n) and n!="0"
         badge_json[u]["nitro_since"]=n
         badge_json[u]["hype"]=h
-        with open("user_badges.json", "w", encoding="utf-8") as badges:
+        with open("./settings/user_badges.json", "w", encoding="utf-8") as badges:
             json.dump(badge_json, badges)
 
     @detail.command()
@@ -64,7 +64,7 @@ class WhatIs:
         await ctx.author.create_dm()
         dm=ctx.author.dm_channel
 
-        with open("user_badges.json", "r", encoding="utf-8") as badges:
+        with open("./settings/user_badges.json", "r", encoding="utf-8") as badges:
             badge_json=json.load(badges)
         nitro=badge_json.get(str(target.id), {"nitro": False, "hype": None}).get("nitro", False)
         nitro_since=badge_json.get(str(target.id), {"nitro_since": 0, "hype": None}).get("nitro_since", 0)
