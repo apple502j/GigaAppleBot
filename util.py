@@ -94,3 +94,26 @@ class RealMemberConverter(c.Converter):
             return None
         except BaseException:
             traceback.print_exc()
+
+def Range(min, max):
+    """real range"""
+    return range(min, max+1)
+
+try:
+    from discord.ext.commands import Cog as CogHelper
+except ImportError:
+    CogHelper=object
+
+async def invoke(ctx):
+    if ctx.command is not None and not isinstance(ctx.command, c.Group):
+        ctx.bot.dispatch('command', ctx)
+        try:
+            if await ctx.bot.can_run(ctx, call_once=True):
+                await ctx.command.invoke(ctx)
+        except c.CommandError as exc:
+            await ctx.command.dispatch_error(ctx, exc)
+        else:
+            ctx.bot.dispatch('command_completion', ctx)
+    elif ctx.invoked_with:
+        exc = c.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
+        ctx.bot.dispatch('command_error', ctx, exc)

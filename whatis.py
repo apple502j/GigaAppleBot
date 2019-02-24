@@ -9,9 +9,9 @@ import discord as d
 
 from localize import _
 import localize
-from util import SafeList, RealMemberConverter
+from util import SafeList, RealMemberConverter, CogHelper
 
-class WhatIs:
+class WhatIs(CogHelper):
     def __init__(self, bot):
         self.bot=bot
         print("WhatIs Initialized")

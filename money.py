@@ -1,14 +1,15 @@
 """A module that can handle money."""
 import json
 from random import randint
+import traceback
 from discord.ext.commands import group, guild_only
 import discord as d
 
 from localize import _
 import localize
-from util import m2m, isonline
+from util import m2m, isonline, CogHelper
 
-class Money:
+class Money(CogHelper):
     def __init__(self, bot, mtj):
         self._mdict={}
         self.bot=bot

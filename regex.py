@@ -4,8 +4,9 @@ import re
 from discord.ext.commands import group
 
 from localize import _
+from util import CogHelper
 
-class Regex:
+class Regex(CogHelper):
     @group()
     async def regex(self, ctx):
         pass

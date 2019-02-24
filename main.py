@@ -27,7 +27,7 @@ import mw_api_client as mwc
 from emojiflags import lookup as ec
 from localize import _
 import localize
-from util import stream, sortstr, m2m
+from util import stream, sortstr, m2m, invoke
 from xmlhelp import all_in_one as get_help_embed
 
 env=platform.system()
@@ -72,6 +72,8 @@ from regex import Regex
 bot.add_cog(Regex())
 from whatis import WhatIs
 bot.add_cog(WhatIs(bot=bot))
+from reversi import Reversi
+bot.add_cog(Reversi(bot=bot))
 
 def clear_synth():
     try:
@@ -152,6 +154,10 @@ async def on_message_edit(old, new):
     if True:
         Money(bot, MONEY_TRANSFER_INFO).setum(uid, Money(bot, MONEY_TRANSFER_INFO).getum(uid)+adds_k)
 
+#@bot.check
+async def testmode(ctx):
+    return ctx.author.id == 398412979067944961
+
 @bot.event
 async def on_message(msg):
     """ 返事 """
@@ -164,7 +170,7 @@ async def on_message(msg):
     if msg.channel.id == 497983550625153024:
         import jobs
         jobs.send(msg, bot)
-    await bot.invoke(ctx)
+    await invoke(ctx)
 
 class TestException(c.CommandError):
     pass
@@ -172,8 +178,10 @@ class TestException(c.CommandError):
 @bot.event
 async def on_command_error(ctx, error):
     uid=ctx.author.id
+    traceback.print_exc()
     command=getattr(ctx.command, 'name', '')
-    if not command:
+    print(f"command used {command}")
+    if isinstance(error, c.CommandNotFound) or not command:
         await ctx.send(_("excs.noCommand", uid))
         return
     async def report(name, *args, detail=False, more=None):
@@ -943,7 +951,7 @@ async def pk(ctx):
     uid=ctx.author.id
     win=False
     emojis=[emojy.emojize(e) for e in (':up-left_arrow:', ':fast_up_button:', ':upwards_button:', ':up_arrow:', ':up-right_arrow:')]
-    msg = await ctx.send(_("pk.wait", uid))
+    msg = await ctx.send(_("game.wait", uid))
     pk=randint(0, 4)
     print(f"cheat: {pk}")
     pk_emoji=""
@@ -952,14 +960,14 @@ async def pk(ctx):
             pk_emoji += emojy.emojize(":heavy_large_circle:")
         else:
             pk_emoji += emojy.emojize(":cross_mark:")
-    def chk(r):
-        return str(r.emoji) in emojis and r.message_id == msg.id and r.user_id == uid
     async with ctx.typing():
         for emoji in emojis:
             await msg.add_reaction(emoji)
         embed=d.Embed(title=_("pk.title", uid), description=_("pk.situation", uid), color=randint(0, 0xffffff))
         embed.set_image(url="http://u.cubeupload.com/apple502j/ljPH7f.png")
         await msg.edit(embed=embed)
+    def chk(r):
+        return str(r.emoji) in emojis and r.message_id == msg.id and r.user_id == uid
     try:
         r = await bot.wait_for("raw_reaction_add", check=chk, timeout=60)
         await msg.remove_reaction(str(r.emoji), ctx.author)
