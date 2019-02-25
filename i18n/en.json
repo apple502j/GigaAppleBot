@@ -182,5 +182,10 @@
     "reversi.status":"Status",
     "reversi.ended":"This game ended.",
     "reversi.cpu":"CPU",
-    "reversi.invite":"{0}, someone wants you to play reversi! React with {0} within 60 secs to start"
+    "reversi.invite":"{0}, someone wants you to play reversi! React with {0} within 60 secs to start",
+    "prefix.get":"Your prefix is `{0}`.",
+    "prefix.set":"Your prefix is set to `{0}`.",
+    "prefix.invalid":"The prefix is invalid. It must not contain quotes, at-mark, or shape. It also cannot be `me:`, which is my default prefix. To reset it, use `me:prefix reset`.",
+    "prefix.reset":"You are now using the default prefix `me:`.",
+    "prefix.force":"The prefix for {0} is now `{1}`."
 }

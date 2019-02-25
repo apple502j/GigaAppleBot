@@ -11,13 +11,13 @@
             Welcome to GigaAppleBot's Help! You can find informations about this bot here. To get help of a specific command, use `me:help [command]`.
         </section>
         <section title="Available Commands">
-            These commands are available for everyone: `help`, `setlang`, `hello`, `translate`, `tts`, `scratchnews`, `newpost`, `newposttopic`, `eqinfo`, `ghissue`, `birthday`, `morize`, `ping`
+            These commands are available for everyone: `help`, `setlang`, `hello`, `translate`, `tts`, `scratchnews`, `newpost`, `newposttopic`, `eqinfo`, `ghissue`, `birthday`, `morize`, `ping`, `credits`, `status`, `here`, `invite`, `wiki`, `longandright`, `pk`, `reversi`
         </section>
         <section title="Available Module Commands">
-            Module commands can be used like `me:money wallet`. To find help of them, specify by using hyphen. (like `me:help money-wallet`) These module commands are available for everyone: `money wallet`, `money give`, `money bet`, `regex sub`, `regex valid`, `regex match`
+            Module commands can be used like `me:money wallet`. To find help of them, specify by using hyphen. (like `me:help money-wallet`) These module commands are available for everyone: `money wallet`, `money give`, `money bet`, `money rate`, `money transfer`, `regex sub`, `regex valid`, `regex match`, `detail user`
         </section>
         <section title="Owner Commands">
-            These commands are for owner. `exit`, `votefornick`, `clear_cache`, `reload`, `demojy`
+            These commands are for owner. `exit`, `run`, `clear_cache`, `reload`, `demojy`, `eval`, `purge`
         </section>
     </sections>
 </help>

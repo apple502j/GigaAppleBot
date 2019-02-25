@@ -4,12 +4,13 @@ import re
 from discord.ext.commands import group
 
 from localize import _
-from util import CogHelper
+from util import CogHelper, not_found
 
 class Regex(CogHelper):
     @group()
     async def regex(self, ctx):
-        pass
+        if not ctx.invoked_subcommand:
+            await not_found(ctx)
 
     @staticmethod
     @regex.command()

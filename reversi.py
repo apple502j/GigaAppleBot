@@ -7,6 +7,7 @@ from discord.ext import commands as c
 from emoji import emojize
 from localize import _
 from util import Range, CogHelper
+from money import Money
 
 DOING = []
 
@@ -214,5 +215,9 @@ class Reversi(CogHelper):
                     player_pt+=1
         await self.draw_board(ctx.author, msg, board, turn, _("reversi.ended", uid))
         await ctx.send(_("reversi.result", uid, cpu_pt, player_pt))
+        if cpu_pt < player_pt:
+            user_k=Money.getum(uid)
+            user_k+=(player_pt-cpu_pt)
+            Money.setum(uid, user_k)
         #self.bot.remove_listener(on_raw_reaction_add)
         DOING.remove(ctx.channel.id)

@@ -105,7 +105,7 @@ except ImportError:
     CogHelper=object
 
 async def invoke(ctx):
-    if ctx.command is not None and not isinstance(ctx.command, c.Group):
+    if ctx.command is not None:
         ctx.bot.dispatch('command', ctx)
         try:
             if await ctx.bot.can_run(ctx, call_once=True):
@@ -117,3 +117,7 @@ async def invoke(ctx):
     elif ctx.invoked_with:
         exc = c.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
         ctx.bot.dispatch('command_error', ctx, exc)
+
+async def not_found(ctx):
+    exc = c.CommandNotFound('Command "{}" is not found'.format(ctx.invoked_with))
+    ctx.bot.dispatch('command_error', ctx, exc)

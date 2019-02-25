@@ -7,7 +7,7 @@ import discord as d
 
 from localize import _
 import localize
-from util import m2m, isonline, CogHelper
+from util import m2m, isonline, CogHelper, not_found
 
 class Money(CogHelper):
     def __init__(self, bot, mtj):
@@ -17,7 +17,8 @@ class Money(CogHelper):
 
     @group()
     async def money(self, ctx):
-        pass
+        if not ctx.invoked_subcommand:
+            await not_found(ctx)
 
     def getum(self, uid):
         uid=str(uid)

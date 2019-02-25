@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<help>
+    <meta>
+        <title>me:translate</title>
+        <desc>A command to translate a message.</desc>
+    </meta>
+    <sections>
+        <section title="Usage">
+            Use like `me:translate ja Hello!`. The first arg is 2-letters language code and the second is the text. **NOTE: You need not quote the text.**
+        </section>
+        <section title="React2Translate">
+            This bot supports react-to-translate. To use it, react with a country flag. Example:
+            US, UK, Canada: English
+            China: Simplified Chinese
+            Taiwan, Hong Kong: Traditional Chinese
+            Japan: Japanese
+        </section>
+    </sections>
+</help>

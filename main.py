@@ -63,8 +63,7 @@ with open("longwords.json", "r") as lwj:
     LONG_WORDS = json.load(lwj)
 localize.update()
 localize.getlocale(0)
-bot = c.Bot(command_prefix="me:", activity=d.Activity(name="me:help Icon by kazuta123",
-                                                                    type=d.ActivityType.watching))
+bot = c.Bot(command_prefix="me:", activity=d.Activity(name="me:help Icon by kazuta123", type=d.ActivityType.watching))
 
 from money import Money
 bot.add_cog(Money(bot=bot, mtj=MONEY_TRANSFER_INFO))
@@ -74,6 +73,8 @@ from whatis import WhatIs
 bot.add_cog(WhatIs(bot=bot))
 from reversi import Reversi
 bot.add_cog(Reversi(bot=bot))
+from prefixes import PrefixManager
+bot.add_cog(PrefixManager(bot=bot))
 
 def clear_synth():
     try:
@@ -178,6 +179,7 @@ class TestException(c.CommandError):
 @bot.event
 async def on_command_error(ctx, error):
     uid=ctx.author.id
+    print(error)
     traceback.print_exc()
     command=getattr(ctx.command, 'name', '')
     print(f"command used {command}")

@@ -9,7 +9,7 @@ import discord as d
 
 from localize import _
 import localize
-from util import SafeList, RealMemberConverter, CogHelper
+from util import SafeList, RealMemberConverter, CogHelper, not_found
 
 class WhatIs(CogHelper):
     def __init__(self, bot):
@@ -18,7 +18,8 @@ class WhatIs(CogHelper):
 
     @c.group()
     async def detail(self, ctx):
-        pass
+        if not ctx.invoked_subcommand:
+            await not_found(ctx)
 
     def to_member(self, user_class, requester):
         satisfiable=list(filter(lambda member: member.id == user_class.id and member.guild.get_member(requester.id) and member.guild.me, list(self.bot.get_all_members())))
