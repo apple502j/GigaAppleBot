@@ -161,7 +161,7 @@
     "whatis.noNitro":"Not Nitro User",
     "whatis.hypesquad":"HypeSquad",
     "credits.title":"Credits",
-    "credits.credits":"This program contains emojiflags library from [GitHub, jonathan-kosgei](https://github.com/jonathan-kosgei/emoji-flags).\nReversi modified from [Python Games](https://github.com/KenT2/python-games/blob/master/flippy.py) under Simplified BSD.\nHuge thanks to Rapptz for creating **rewrite** version of discord.py.\nThis uses:\ndiscord.py@rewrite, mw-api-client, emoji, github3.py, requests, beautifulsoup4, pypinyin.\nscratchapi2 is made by the owner, apple502j.\nTwo emoji, specifically mute and deafen emoji, is based on Twemoji [1f3a7](https://github.com/twitter/twemoji/blob/gh-pages/svg/1f3a7.svg) and [1f3a4](https://github.com/twitter/twemoji/blob/gh-pages/svg/1f3a4.svg).\nSoccer goal image by Alex Eben Meyer (under CC BY-SA 2.0 aka Scratch's License)",
+    "credits.credits":"This program contains emojiflags library from [GitHub, jonathan-kosgei](https://github.com/jonathan-kosgei/emoji-flags).\nReversi modified from [Python Games](https://github.com/KenT2/python-games/blob/master/flippy.py) under Simplified BSD.\nHuge thanks to Rapptz for creating **rewrite** version of discord.py.\nThis uses:\ndiscord.py@rewrite, mw-api-client, emoji, github3.py, requests, beautifulsoup4, pypinyin.\nscratchapi2 is made by the owner, apple502j.\nTwo emoji, specifically mute and deafen emoji, is based on Twemoji [1f3a7](https://github.com/twitter/twemoji/blob/gh-pages/svg/1f3a7.svg) and [1f3a4](https://github.com/twitter/twemoji/blob/gh-pages/svg/1f3a4.svg).\nSoccer goal image by Alex Eben Meyer (under CC BY-SA 2.0 aka Scratch's License)\nUses these APIs: Scratch API, Scratch Translate API, Scratch TTS API, p2pquake API, Scratch Forum RSS, Scratch Wiki API, Enpedia API, Wikipedia API, GitHub API, Wikidata API.",
     "game.wait":"Wait a moment...",
     "pk.title":"Penalty shoot-out",
     "pk.situation":"This game ended 2 to 2, tie game! Now the time began! Kick the ball to the goal. Goalkeeper is me. It's you that can win this, and it's you that can lose this!",
@@ -187,5 +187,18 @@
     "prefix.set":"Your prefix is set to `{0}`.",
     "prefix.invalid":"The prefix is invalid. It must not contain quotes, at-mark, or shape. It also cannot be `me:`, which is my default prefix. To reset it, use `me:prefix reset`.",
     "prefix.reset":"You are now using the default prefix `me:`.",
-    "prefix.force":"The prefix for {0} is now `{1}`."
+    "prefix.force":"The prefix for {0} is now `{1}`.",
+    "cloud.set":"set",
+    "cloud.create":"created",
+    "cloud.delete":"deleted",
+    "cloud.rename":"renamed",
+    "cloud.title":"Cloud Status on Project {0}",
+    "cloud.desc":"`{0}` was {1}",
+    "cloud.new":"New value",
+    "cloud.timestamp":"Time",
+    "cloud.user":"Username",
+    "cloud.none":"(None)",
+    "voice.tts":"Speaking `{0}` on Voice",
+    "voice.volumeSet":"Volume is now {0}%.",
+    "voice.volumeRange":"Volume is an integer from 0(mute) to 100(loudest)."
 }

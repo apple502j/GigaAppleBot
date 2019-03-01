@@ -39,14 +39,19 @@ versions=sp.stdout.read().decode("utf-8").strip().split()
 VERSION_DICT=[]
 for item in versions:
     keys=item.split("==", 1)
-    if keys[0] in ('discord.py', 'aiohttp', 'beautifulsoup4', 'certifi', 'chardet',
-                   'cryptography', 'emoji', 'github3.py', 'lxml', 'mw-api-client',
+    if keys[0] in ('aiohttp', 'beautifulsoup4', 'certifi', 'chardet',
+                   'cryptography', 'emoji', 'github3.py', 'lxml',
                    'oauthlib', 'pypinyin', 'requests', 'requests-oauthlib',
                    'scratchapi2', 'tornado', 'urllib3', 'websockets'):
         VERSION_DICT.append((keys[0], keys[1]))
+    elif keys[0].endswith('discord.py') or keys[0].endswith('mw-api-client'):
+        pack=keys[0].replace("# Editable Git install with no remote (", "")
+        ver=keys[1].replace(")","")
+        VERSION_DICT.append((pack, ver))
 
 HASH_DICT=[]
-for f in ('main', 'eqapi', 'localize', 'money', 'regex', 'util'):
+for f in ('main', 'eqapi', 'localize', 'money', 'regex', 'util', 'voice',
+          'whatis', 'prefixes', 'reversi'):
     with open("{0}.py".format(f), "rb") as fobj:
         HASH_DICT.append((f, hashlib.md5(fobj.read()).hexdigest()))
 
@@ -64,6 +69,7 @@ with open("longwords.json", "r") as lwj:
 localize.update()
 localize.getlocale(0)
 bot = c.Bot(command_prefix="me:", activity=d.Activity(name="me:help Icon by kazuta123", type=d.ActivityType.watching))
+bot.using_synth_cache=False
 
 from money import Money
 bot.add_cog(Money(bot=bot, mtj=MONEY_TRANSFER_INFO))
@@ -75,8 +81,14 @@ from reversi import Reversi
 bot.add_cog(Reversi(bot=bot))
 from prefixes import PrefixManager
 bot.add_cog(PrefixManager(bot=bot))
+from voice import Voice
+bot.add_cog(Voice(bot=bot))
 
-def clear_synth():
+def clear_synth(force=False):
+    if bot.using_synth_cache and not force:
+        print("Synth in use! abandoned.")
+        return
+    print("Synth cache cleared.")
     try:
         shutil.rmtree("synth")
     except:
@@ -97,6 +109,12 @@ def catnese(word, uid):
             sp[i]=_("translate.meow2", uid)
     return ''.join(sp)
 
+async def tasks():
+    await bot.wait_until_ready()
+    while not bot.is_closed():
+        clear_synth()
+        await asyncio.sleep(120)
+
 @bot.event
 async def on_raw_reaction_add(ev):
     uid=ev.user_id
@@ -104,7 +122,10 @@ async def on_raw_reaction_add(ev):
     emoji=ev.emoji
     msg_id=ev.message_id
     channel = bot.get_channel(cid)
-    text = (await channel.get_message(msg_id)).content
+    msg = await channel.get_message(msg_id)
+    if msg.author.bot:
+        return
+    text = msg.content
     LANGS = {
         ":flag_eg:":"al",
         ":flag_cn:":"zh",
@@ -207,6 +228,9 @@ async def on_command_error(ctx, error):
     elif isinstance(error, c.NoPrivateMessage):
         await report("noDM")
     elif isinstance(error, c.CommandOnCooldown):
+        if await bot.is_owner(ctx.author):
+            await ctx.reinvoke()
+            return
         await report("cooldown", round(error.retry_after))
     elif isinstance(error, c.NotOwner):
         await report("notOwner", getattr(bot.get_user(bot.owner_id), 'name', _("excs.unknownUser", uid)))
@@ -325,7 +349,7 @@ async def exit(ctx):
 @c.is_owner()
 async def clear_cache(ctx):
     """Owner only; cache clear command."""
-    clear_synth()
+    clear_synth(force=True)
 
 @bot.command()
 @c.is_owner()
@@ -486,6 +510,26 @@ async def translate(ctx,lang="ja",*,txt=None):
     else:
         await translater(ctx,lang,txt)
 
+@bot.command()
+async def cloud(ctx, projectid):
+    uid=ctx.author.id
+    URL=f"https://clouddata.scratch.mit.edu/logs?projectid={projectid}&limit=5&offset=0"
+    r=requests.get(URL)
+    r.raise_for_status()
+    verb={
+        "set_var": _("cloud.set", uid),
+        "create_var": _("cloud.create", uid),
+        "rename_var": _("cloud.rename", uid),
+        "del_var": _("cloud.delete", uid)
+    }
+    for item in r.json():
+        print(item)
+        embed=d.Embed(title=_("cloud.title", uid, projectid),description=_("cloud.desc", uid, item["name"], verb[item["verb"]]), color=randint(0, 0xFFFFFF))
+        embed.add_field(name=_("cloud.new", uid), value=_("cloud.none",uid) if item["value"] is None else "`{0}`".format(item["value"]), inline=True)
+        embed.add_field(name=_("cloud.timestamp", uid), value=datetime.fromtimestamp(item["timestamp"]/1000).strftime("%Y/%m/%d %H:%M:%S"), inline=True)
+        embed.add_field(name=_("cloud.user",uid), value=item["user"], inline=True)
+        await ctx.send(embed=embed)
+
 SYNTH_LIMIT=0
 
 @bot.command()
@@ -496,6 +540,7 @@ async def tts(ctx, text, gender='male', locale='ja-JP'):
     if SYNTH_LIMIT+20 > itime():
         await ctx.send(_("tts.rateLimit", uid))
         return
+    bot.using_synth_cache=True
     async with ctx.typing():
         text=quote(text)
         url=f"https://synthesis-service.scratch.mit.edu/synth?locale={locale}&gender={gender}&text={text}"
@@ -506,6 +551,7 @@ async def tts(ctx, text, gender='male', locale='ja-JP'):
             dfile=d.File(f2, 'text2speech.mp3')
             await ctx.send(file=dfile)
     SYNTH_LIMIT=itime()
+    bot.using_synth_cache=False
 
 @bot.command()
 async def scratchnews(ctx):
@@ -886,7 +932,7 @@ async def morize(ctx):
     await ctx.send(_("memorize.description", uid))
 
     msg=await ctx.send(_("memorize.memorize", uid, ankey2))
-    time.sleep(3)
+    await a.sleep(3)
     await msg.delete()
     def chk(ms):
         return (
@@ -998,4 +1044,5 @@ async def pk(ctx):
         await ctx.send(_("pk.win", uid))
 
 print("Do")
+bot.loop.create_task(tasks())
 bot.run(TOKEN)
